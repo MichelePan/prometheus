@@ -5,6 +5,11 @@ from config import BLOCKS
 from prices import get_price
 from calc import calc_pips
 
+def fmt(value, decimals=2):
+    if value is None:
+        return "–"
+    return f"{value:.{decimals}f}"
+
 st.set_page_config(layout="wide")
 st.title("FX – NORM + NORM")
 
@@ -114,20 +119,20 @@ for name, rows, gap in blocks:
             <div class="cell header buy">{buy['pair']} (BUY)</div>
 
             <div class="cell label">INGR</div>
-            <div class="cell value">{sell['entry']:.5f}</div>
-            <div class="cell value">{buy['entry']:.5f}</div>
+            <div class="cell value">{fmt(sell['entry'], 5)}</div>
+            <div class="cell value">{fmt(buy['entry'], 5)}</div>
 
             <div class="cell label">ATT</div>
             <div class="cell value">{sell['att']}</div>
             <div class="cell value">{buy['att']}</div>
 
             <div class="cell label">MOV</div>
-            <div class="cell value">{sell['pips']:.2f}</div>
-            <div class="cell value">{buy['pips']:.2f}</div>
+            <div class="cell value">{fmt(sell['pips'], 2)}</div>
+            <div class="cell value">{fmt(buy['pips']:.2)}</div>
         </div>
 
         <div class="gap">
-            GAP PIPS&nbsp;&nbsp;{gap:.2f}
+            GAP PIPS&nbsp;&nbsp;{fmt(gap, 2)}
         </div>
     </div>
     """
