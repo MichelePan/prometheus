@@ -218,4 +218,4 @@ html += "</div>"
 # Render HTML
 # ===============================
 
-components.html(html, height=520, scrolling=False)
+components.html(html, height=900, scrolling=True)
