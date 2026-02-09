@@ -17,10 +17,14 @@ def cls_gap(value):
     return "pos" if value > 0 else "neg"
 
 st.set_page_config(layout="wide")
-st.title("PROMETHEUS")
+st.title("FX – NORM + NORM")
 
 st_autorefresh(interval=5 * 60 * 1000, key="auto")
 
+# ⬇️ PRIMA carichiamo i dati
+blocks, last_update = load_blocks()
+
+# ⬇️ POI costruiamo la UI
 col1, col2 = st.columns([1, 3])
 
 with col1:
@@ -53,8 +57,6 @@ def load_blocks():
 
     ts = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
     return out, ts
-
-blocks, last_update = load_blocks()
 
 html = """
 <style>
