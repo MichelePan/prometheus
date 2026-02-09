@@ -35,7 +35,7 @@ def cls_pips(value):
 # ===============================
 
 st.set_page_config(layout="wide")
-st.title("FX – NORM + NORM")
+st.title("PROMETHEUS")
 
 # auto refresh ogni 5 minuti
 st_autorefresh(interval=5 * 60 * 1000, key="auto")
