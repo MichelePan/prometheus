@@ -77,6 +77,9 @@ html = """
     margin-top: 6px;
     padding-top: 4px;
 }
+.sell { color: #c00000; font-weight: bold; }
+.buy  { color: #1f4ed8; font-weight: bold; }
+
 </style>
 
 <div class="container">
@@ -91,21 +94,18 @@ for name, rows, gap in blocks:
         cls = "pos" if r["pips"] and r["pips"] > 0 else "neg"
         html += f"""
         <div class="row">
-            <div class="pair">
-                {r['pair']} &nbsp;
-                <span style="font-size:12px; color:#666">
-                    ({r['direction']})
-                </span>
+            <div class="pair {r['direction'].lower()}">
+                {r['pair']} ({r['direction']})
             </div>
-            <div class="line"><span>INGR</span><span>{r['entry']}</span></div>
+            <div class="line"><span>INGR</span><span>{r['entry']:.5f}</span></div>
             <div class="line"><span>ATT</span><span>{r['att']}</span></div>
-            <div class="line"><span>MOV</span><span class="{cls}">{r['pips']}</span></div>
+            <div class="line"><span>MOV</span><span class="{cls}">{r['pips']:.2f}</span></div>
         </div>
         """
     gap_cls = "pos" if gap and gap > 0 else "neg"
     html += f"""
         <div class="gap {gap_cls}">
-            GAP PIPS&nbsp;&nbsp;{gap}
+            GAP PIPS&nbsp;&nbsp;{gap:.2f}
         </div>
     </div>
     """
