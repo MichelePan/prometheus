@@ -1,11 +1,17 @@
 import yfinance as yf
 
 def get_current_price(pair):
-    symbol = pair + "=X"
-    ticker = yf.Ticker(symbol)
-    data = ticker.history(period="1d", interval="1m")
+    try:
+        symbol = pair + "=X"
+        ticker = yf.Ticker(symbol)
 
-    if data.empty:
+        # Metodo veloce (meno rate-limit)
+        price = ticker.fast_info.get("last_price")
+
+        if price is None:
+            price = ticker.info.get("regularMarketPrice")
+
+        return float(price) if price else None
+
+    except Exception:
         return None
-
-    return float(data["Close"].iloc[-1])
