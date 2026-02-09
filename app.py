@@ -4,6 +4,7 @@ import streamlit.components.v1 as components
 from config import BLOCKS
 from prices import get_price
 from calc import calc_pips
+from datetime import datetime
 
 def fmt(value, decimals=2):
     if value is None:
@@ -20,9 +21,15 @@ st.title("PROMETHEUS")
 
 st_autorefresh(interval=5 * 60 * 1000, key="auto")
 
-if st.button("🔄 Refresh"):
-    st.cache_data.clear()
-    st.rerun()
+col1, col2 = st.columns([1, 3])
+
+with col1:
+    if st.button("🔄 Refresh"):
+        st.cache_data.clear()
+        st.rerun()
+
+with col2:
+    st.caption(f"Ultimo aggiornamento: {last_update}")
 
 @st.cache_data(ttl=300)
 def load_blocks():
@@ -32,7 +39,6 @@ def load_blocks():
         for pair, direction, entry in block["pairs"]:
             att = get_price(pair)
             pips = calc_pips(direction, entry, att)
-
             rows.append({
                 "pair": pair,
                 "direction": direction,
@@ -42,11 +48,13 @@ def load_blocks():
             })
         gap = None
         if rows[0]["pips"] is not None and rows[1]["pips"] is not None:
-            gap = round(rows[0]["pips"] + rows[1]["pips"], 1)
+            gap = round(rows[0]["pips"] + rows[1]["pips"], 2)
         out.append((block["name"], rows, gap))
-    return out
 
-blocks = load_blocks()
+    ts = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+    return out, ts
+
+blocks, last_update = load_blocks()
 
 html = """
 <style>
@@ -107,6 +115,12 @@ html = """
 
 .pos { color: green; }
 .neg { color: red; }
+
+@media (max-width: 768px) {
+    .container {
+        grid-template-columns: 1fr;
+    }
+}
 </style>
 
 
