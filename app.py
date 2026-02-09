@@ -1,69 +1,61 @@
 import streamlit as st
-import pandas as pd
-from config import FX_NORM_NORM
-from prices import get_current_price
+from streamlit_autorefresh import st_autorefresh
+from config import BLOCKS
+from prices import get_price
 from calc import calc_pips
-import time
 
-@st.cache_data(ttl=300)  # 5 minuti
-def load_prices():
-    rows = []
+st.set_page_config(layout="wide")
+st.title("FX – NORM + NORM")
 
-    for fx in FX_NORM_NORM:
-        current = get_current_price(fx["pair"])
-        pips = calc_pips(fx["pair"], fx["entry"], current)
+st_autorefresh(interval=5 * 60 * 1000, key="auto")
 
-        rows.append({
-            "Coppia": fx["pair"],
-            "INGR": fx["entry"],
-            "ATT": current,
-            "MOV PIPS": pips
-        })
-
-    return rows
-
-
-st.set_page_config(
-    page_title="FX Dashboard – NORM + NORM",
-    layout="centered"
-)
-
-st.title("💱 FX Dashboard – NORM + NORM")
-
-# Refresh manuale
 if st.button("🔄 Refresh manuale"):
     st.cache_data.clear()
     st.rerun()
 
-# Refresh automatico ogni 5 minuti
-st.caption("⏱ Refresh automatico ogni 5 minuti")
-time.sleep(0)  # placeholder
+@st.cache_data(ttl=300)
+def load_blocks():
+    out = []
+    for block in BLOCKS:
+        rows = []
+        for pair, entry in block["pairs"]:
+            att = get_price(pair)
+            pips = calc_pips(pair, entry, att)
+            rows.append({
+                "pair": pair,
+                "entry": entry,
+                "att": att,
+                "pips": pips
+            })
+        gap = None
+        if rows[0]["pips"] is not None and rows[1]["pips"] is not None:
+            gap = round(rows[0]["pips"] + rows[1]["pips"], 1)
 
-rows = load_prices()
-df = pd.DataFrame(rows)
+        out.append((block["name"], rows, gap))
+    return out
 
-for fx in FX_NORM_NORM:
-    current = get_current_price(fx["pair"])
-    pips = calc_pips(fx["pair"], fx["entry"], current)
+blocks = load_blocks()
 
-    rows.append({
-        "Coppia": fx["pair"],
-        "INGR": fx["entry"],
-        "ATT": current,
-        "MOV PIPS": pips
-    })
+cols = st.columns(4)
 
-df = pd.DataFrame(rows)
+for col, (name, rows, gap) in zip(cols, blocks):
+    with col:
+        st.markdown(f"### {name}")
 
-def color_pips(val):
-    if val is None:
-        return ""
-    return "color: green" if val > 0 else "color: red"
+        for r in rows:
+            color = "green" if r["pips"] and r["pips"] > 0 else "red"
+            st.markdown(
+                f"""
+                **{r['pair']}**
+                INGR: {r['entry']}
+                ATT: {r['att']}
+                <span style="color:{color}">MOV PIPS: {r['pips']}</span>
+                """,
+                unsafe_allow_html=True
+            )
 
-st.dataframe(
-    df.style.applymap(color_pips, subset=["MOV PIPS"]),
-    use_container_width=True
-)
-
-# Auto refresh
-st.experimental_autorefresh(interval=5 * 60 * 1000)
+        st.markdown("---")
+        st.markdown(
+            f"**GAP PIPS:** <span style='color:blue'>{gap}</span>",
+            unsafe_allow_html=True
+        )

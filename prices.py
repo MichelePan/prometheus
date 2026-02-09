@@ -1,17 +1,9 @@
 import yfinance as yf
 
-def get_current_price(pair):
+def get_price(pair):
     try:
-        symbol = pair + "=X"
-        ticker = yf.Ticker(symbol)
-
-        # Metodo veloce (meno rate-limit)
-        price = ticker.fast_info.get("last_price")
-
-        if price is None:
-            price = ticker.info.get("regularMarketPrice")
-
+        t = yf.Ticker(pair + "=X")
+        price = t.fast_info.get("last_price")
         return float(price) if price else None
-
-    except Exception:
+    except:
         return None

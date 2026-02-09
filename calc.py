@@ -1,8 +1,5 @@
 def calc_pips(pair, entry, current):
     if current is None:
         return None
-
-    if "JPY" in pair:
-        return round((current - entry) * 100, 1)
-
-    return round((current - entry) * 10000, 1)
+    mult = 100 if "JPY" in pair else 10000
+    return round((current - entry) * mult, 1)
