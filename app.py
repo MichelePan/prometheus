@@ -1,5 +1,6 @@
 import streamlit as st
 from streamlit_autorefresh import st_autorefresh
+import streamlit.components.v1 as components
 from config import BLOCKS
 from prices import get_price
 from calc import calc_pips
@@ -15,7 +16,7 @@ if st.button("🔄 Refresh manuale"):
 
 @st.cache_data(ttl=300)
 def load_blocks():
-    result = []
+    out = []
     for block in BLOCKS:
         rows = []
         for pair, entry in block["pairs"]:
@@ -30,25 +31,28 @@ def load_blocks():
         gap = None
         if rows[0]["pips"] is not None and rows[1]["pips"] is not None:
             gap = round(rows[0]["pips"] + rows[1]["pips"], 1)
-        result.append((block["name"], rows, gap))
-    return result
+        out.append((block["name"], rows, gap))
+    return out
 
 blocks = load_blocks()
 
-# ===== CSS stile Excel =====
-st.markdown("""
+html = """
 <style>
-.block {
-    border: 1px solid #999;
-    padding: 6px;
+.container {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
     font-family: Arial, sans-serif;
     font-size: 14px;
 }
-.block-title {
+.block {
+    border: 1px solid #999;
+    padding: 6px;
+}
+.title {
     text-align: center;
     font-weight: bold;
     border-bottom: 1px solid #999;
-    padding-bottom: 4px;
     margin-bottom: 6px;
 }
 .row {
@@ -58,58 +62,47 @@ st.markdown("""
 .pair {
     font-weight: bold;
 }
-.cell {
+.line {
     display: flex;
     justify-content: space-between;
 }
-.label {
-    color: #555;
-}
-.value {
-    font-weight: bold;
-}
-.pos {
-    color: green;
-}
-.neg {
-    color: red;
-}
+.pos { color: green; }
+.neg { color: red; }
 .gap {
     text-align: center;
     font-weight: bold;
+    border-top: 1px solid #999;
     margin-top: 6px;
     padding-top: 4px;
-    border-top: 1px solid #999;
 }
 </style>
-""", unsafe_allow_html=True)
 
-cols = st.columns(4)
+<div class="container">
+"""
 
-for col, (name, rows, gap) in zip(cols, blocks):
-    with col:
-        html = f"""
-        <div class="block">
-            <div class="block-title">{name}</div>
-        """
-
-        for r in rows:
-            color = "pos" if r["pips"] and r["pips"] > 0 else "neg"
-            html += f"""
-            <div class="row">
-                <div class="pair">{r['pair']}</div>
-                <div class="cell"><span class="label">INGR</span><span class="value">{r['entry']}</span></div>
-                <div class="cell"><span class="label">ATT</span><span class="value">{r['att']}</span></div>
-                <div class="cell"><span class="label">MOV</span><span class="value {color}">{r['pips']}</span></div>
-            </div>
-            """
-
-        gap_color = "pos" if gap and gap > 0 else "neg"
+for name, rows, gap in blocks:
+    html += f"""
+    <div class="block">
+        <div class="title">{name}</div>
+    """
+    for r in rows:
+        cls = "pos" if r["pips"] and r["pips"] > 0 else "neg"
         html += f"""
-            <div class="gap {gap_color}">
-                GAP PIPS&nbsp;&nbsp;{gap}
-            </div>
+        <div class="row">
+            <div class="pair">{r['pair']}</div>
+            <div class="line"><span>INGR</span><span>{r['entry']}</span></div>
+            <div class="line"><span>ATT</span><span>{r['att']}</span></div>
+            <div class="line"><span>MOV</span><span class="{cls}">{r['pips']}</span></div>
         </div>
         """
+    gap_cls = "pos" if gap and gap > 0 else "neg"
+    html += f"""
+        <div class="gap {gap_cls}">
+            GAP PIPS&nbsp;&nbsp;{gap}
+        </div>
+    </div>
+    """
 
-        st.markdown(html, unsafe_allow_html=True)
+html += "</div>"
+
+components.html(html, height=420, scrolling=False)
