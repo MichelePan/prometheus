@@ -24,7 +24,7 @@ BLOCKS = [
         "name": "LOONIE - CABLE",
         "pairs": [
             ("USDCAD", "SELL", 1.38000),
-            ("GBPUSD", "BUY",  1.35810),
+            ("GBPUSD", "BUY",  1.03840),
         ]
     },
 ]
