@@ -1,30 +1,90 @@
 import streamlit as st
 from streamlit_autorefresh import st_autorefresh
 import streamlit.components.v1 as components
+from datetime import datetime
+
 from config import BLOCKS
 from prices import get_price
 from calc import calc_pips
-from datetime import datetime
+
+
+# ===============================
+# Utility di formattazione (Excel-like)
+# ===============================
 
 def fmt(value, decimals=2):
     if value is None:
         return "–"
     return f"{value:.{decimals}f}"
 
+
 def cls_gap(value):
     if value is None:
         return ""
     return "pos" if value > 0 else "neg"
 
+
+def cls_pips(value):
+    if value is None:
+        return ""
+    return "pos" if value > 0 else "neg"
+
+
+# ===============================
+# Config pagina
+# ===============================
+
 st.set_page_config(layout="wide")
 st.title("FX – NORM + NORM")
 
+# auto refresh ogni 5 minuti
 st_autorefresh(interval=5 * 60 * 1000, key="auto")
 
-# ⬇️ PRIMA carichiamo i dati
+
+# ===============================
+# Caricamento dati (cache)
+# ===============================
+
+@st.cache_data(ttl=300)
+def load_blocks():
+    out = []
+
+    for block in BLOCKS:
+        rows = []
+
+        for pair, direction, entry in block["pairs"]:
+            att = get_price(pair)
+            pips = calc_pips(direction, entry, att)
+
+            rows.append({
+                "pair": pair,
+                "direction": direction,
+                "entry": entry,
+                "att": att,
+                "pips": pips
+            })
+
+        gap = None
+        if rows[0]["pips"] is not None and rows[1]["pips"] is not None:
+            gap = round(rows[0]["pips"] + rows[1]["pips"], 2)
+
+        out.append((block["name"], rows, gap))
+
+    ts = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+    return out, ts
+
+
+# ===============================
+# PRIMA: carichiamo i dati
+# ===============================
+
 blocks, last_update = load_blocks()
 
-# ⬇️ POI costruiamo la UI
+
+# ===============================
+# UI: refresh + timestamp
+# ===============================
+
 col1, col2 = st.columns([1, 3])
 
 with col1:
@@ -35,28 +95,10 @@ with col1:
 with col2:
     st.caption(f"Ultimo aggiornamento: {last_update}")
 
-@st.cache_data(ttl=300)
-def load_blocks():
-    out = []
-    for block in BLOCKS:
-        rows = []
-        for pair, direction, entry in block["pairs"]:
-            att = get_price(pair)
-            pips = calc_pips(direction, entry, att)
-            rows.append({
-                "pair": pair,
-                "direction": direction,
-                "entry": entry,
-                "att": att,
-                "pips": pips
-            })
-        gap = None
-        if rows[0]["pips"] is not None and rows[1]["pips"] is not None:
-            gap = round(rows[0]["pips"] + rows[1]["pips"], 2)
-        out.append((block["name"], rows, gap))
 
-    ts = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-    return out, ts
+# ===============================
+# HTML + CSS (layout Excel-like)
+# ===============================
 
 html = """
 <style>
@@ -108,15 +150,15 @@ html = """
 .sell { color: #c00000; font-weight: bold; }
 .buy  { color: #1f4ed8; font-weight: bold; }
 
+.pos { color: green; }
+.neg { color: red; }
+
 .gap {
     text-align: center;
     font-weight: bold;
     padding: 6px;
     border-top: 1px solid #999;
 }
-
-.pos { color: green; }
-.neg { color: red; }
 
 @media (max-width: 768px) {
     .container {
@@ -125,9 +167,13 @@ html = """
 }
 </style>
 
-
 <div class="container">
 """
+
+
+# ===============================
+# Rendering blocchi
+# ===============================
 
 for name, rows, gap in blocks:
     sell = rows[0] if rows[0]["direction"] == "SELL" else rows[1]
@@ -151,8 +197,12 @@ for name, rows, gap in blocks:
             <div class="cell value">{fmt(buy['att'], 5)}</div>
 
             <div class="cell label">MOV</div>
-            <div class="cell value">{fmt(sell['pips'], 2)}</div>
-            <div class="cell value">{fmt(buy['pips'], 2)}</div>
+            <div class="cell value {cls_pips(sell['pips'])}">
+                {fmt(sell['pips'], 2)}
+            </div>
+            <div class="cell value {cls_pips(buy['pips'])}">
+                {fmt(buy['pips'], 2)}
+            </div>
         </div>
 
         <div class="gap {cls_gap(gap)}">
@@ -163,4 +213,9 @@ for name, rows, gap in blocks:
 
 html += "</div>"
 
-components.html(html, height=420, scrolling=False)
+
+# ===============================
+# Render HTML
+# ===============================
+
+components.html(html, height=520, scrolling=False)
