@@ -43,68 +43,90 @@ html = """
 .container {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 10px;
+    gap: 12px;
     font-family: Arial, sans-serif;
     font-size: 14px;
 }
+
 .block {
     border: 1px solid #999;
-    padding: 6px;
 }
+
 .title {
     text-align: center;
     font-weight: bold;
+    padding: 6px;
     border-bottom: 1px solid #999;
-    margin-bottom: 6px;
+    background: #f2f2f2;
 }
-.row {
+
+.grid {
+    display: grid;
+    grid-template-columns: 80px 1fr 1fr;
+}
+
+.cell {
+    padding: 6px;
     border-bottom: 1px solid #ddd;
-    padding: 4px 0;
 }
-.pair {
-    font-weight: bold;
-}
-.line {
-    display: flex;
-    justify-content: space-between;
-}
-.pos { color: green; }
-.neg { color: red; }
-.gap {
+
+.header {
     text-align: center;
     font-weight: bold;
-    border-top: 1px solid #999;
-    margin-top: 6px;
-    padding-top: 4px;
+    border-bottom: 1px solid #999;
 }
+
+.label {
+    color: #666;
+}
+
+.value {
+    text-align: right;
+    font-family: monospace;
+}
+
 .sell { color: #c00000; font-weight: bold; }
 .buy  { color: #1f4ed8; font-weight: bold; }
 
+.gap {
+    text-align: center;
+    font-weight: bold;
+    padding: 6px;
+    border-top: 1px solid #999;
+}
 </style>
+
 
 <div class="container">
 """
 
 for name, rows, gap in blocks:
+    sell = rows[0] if rows[0]["direction"] == "SELL" else rows[1]
+    buy  = rows[1] if sell == rows[0] else rows[0]
+
     html += f"""
     <div class="block">
         <div class="title">{name}</div>
-    """
-    for r in rows:
-        cls = "pos" if r["pips"] and r["pips"] > 0 else "neg"
-        html += f"""
-        <div class="row">
-            <div class="pair {r['direction'].lower()}">
-                {r['pair']} ({r['direction']})
-            </div>
-            <div class="line"><span>INGR</span><span>{r['entry']:.5f}</span></div>
-            <div class="line"><span>ATT</span><span>{r['att']}</span></div>
-            <div class="line"><span>MOV</span><span class="{cls}">{r['pips']:.2f}</span></div>
+
+        <div class="grid">
+            <div class="cell"></div>
+            <div class="cell header sell">{sell['pair']} (SELL)</div>
+            <div class="cell header buy">{buy['pair']} (BUY)</div>
+
+            <div class="cell label">INGR</div>
+            <div class="cell value">{sell['entry']:.5f}</div>
+            <div class="cell value">{buy['entry']:.5f}</div>
+
+            <div class="cell label">ATT</div>
+            <div class="cell value">{sell['att']}</div>
+            <div class="cell value">{buy['att']}</div>
+
+            <div class="cell label">MOV</div>
+            <div class="cell value">{sell['pips']:.2f}</div>
+            <div class="cell value">{buy['pips']:.2f}</div>
         </div>
-        """
-    gap_cls = "pos" if gap and gap > 0 else "neg"
-    html += f"""
-        <div class="gap {gap_cls}">
+
+        <div class="gap">
             GAP PIPS&nbsp;&nbsp;{gap:.2f}
         </div>
     </div>
