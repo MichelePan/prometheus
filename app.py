@@ -10,12 +10,17 @@ def fmt(value, decimals=2):
         return "–"
     return f"{value:.{decimals}f}"
 
+def cls_gap(value):
+    if value is None:
+        return ""
+    return "pos" if value > 0 else "neg"
+
 st.set_page_config(layout="wide")
-st.title("FX – NORM + NORM")
+st.title("PROMETHEUS")
 
 st_autorefresh(interval=5 * 60 * 1000, key="auto")
 
-if st.button("🔄 Refresh manuale"):
+if st.button("🔄 Refresh"):
     st.cache_data.clear()
     st.rerun()
 
@@ -99,6 +104,9 @@ html = """
     padding: 6px;
     border-top: 1px solid #999;
 }
+
+.pos { color: green; }
+.neg { color: red; }
 </style>
 
 
@@ -131,7 +139,7 @@ for name, rows, gap in blocks:
             <div class="cell value">{fmt(buy['pips'], 2)}</div>
         </div>
 
-        <div class="gap">
+        <div class="gap {cls_gap(gap)}">
             GAP PIPS&nbsp;&nbsp;{fmt(gap, 2)}
         </div>
     </div>
