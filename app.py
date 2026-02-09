@@ -128,7 +128,7 @@ for name, rows, gap in blocks:
 
             <div class="cell label">MOV</div>
             <div class="cell value">{fmt(sell['pips'], 2)}</div>
-            <div class="cell value">{fmt(buy['pips']:.2)}</div>
+            <div class="cell value">{fmt(buy['pips'], 2)}</div>
         </div>
 
         <div class="gap">
