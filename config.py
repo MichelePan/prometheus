@@ -1,30 +1,30 @@
 BLOCKS = [
     {
-        "name": "Blocco 1",
+        "name": "AUSSIE - KIWI",
         "pairs": [
-            ("AUDUSD", 0.70550),
-            ("NZDUSD", 0.64580),
-        ],
+            ("AUDUSD", "SELL", 0.70550),
+            ("NZDUSD", "BUY",  0.64580),
+        ]
     },
     {
-        "name": "Blocco 2",
+        "name": "FIBER - SWISSY",
         "pairs": [
-            ("USDCHF", 1.01320),
-            ("EURUSD", 0.97484),
-        ],
+            ("USDCHF", "SELL", 1.01320),
+            ("EURUSD", "BUY",  0.97484),
+        ]
     },
     {
-        "name": "Blocco 3",
+        "name": "FIBER - CABLE",
         "pairs": [
-            ("GBPUSD", 1.20009),
-            ("EURUSD", 1.02090),
-        ],
+            ("GBPUSD", "SELL", 1.20009),
+            ("EURUSD", "BUY",  1.02090),
+        ]
     },
     {
-        "name": "Blocco 4",
+        "name": "LOONIE - CABLE",
         "pairs": [
-            ("USDCAD", 1.38000),
-            ("GBPUSD", 1.35810),
-        ],
+            ("USDCAD", "SELL", 1.38000),
+            ("GBPUSD", "BUY",  1.35810),
+        ]
     },
 ]

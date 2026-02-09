@@ -19,11 +19,13 @@ def load_blocks():
     out = []
     for block in BLOCKS:
         rows = []
-        for pair, entry in block["pairs"]:
+        for pair, direction, entry in block["pairs"]:
             att = get_price(pair)
-            pips = calc_pips(pair, entry, att)
+            pips = calc_pips(direction, entry, att)
+
             rows.append({
                 "pair": pair,
+                "direction": direction,
                 "entry": entry,
                 "att": att,
                 "pips": pips
@@ -89,7 +91,12 @@ for name, rows, gap in blocks:
         cls = "pos" if r["pips"] and r["pips"] > 0 else "neg"
         html += f"""
         <div class="row">
-            <div class="pair">{r['pair']}</div>
+            <div class="pair">
+                {r['pair']} &nbsp;
+                <span style="font-size:12px; color:#666">
+                    ({r['direction']})
+                </span>
+            </div>
             <div class="line"><span>INGR</span><span>{r['entry']}</span></div>
             <div class="line"><span>ATT</span><span>{r['att']}</span></div>
             <div class="line"><span>MOV</span><span class="{cls}">{r['pips']}</span></div>
