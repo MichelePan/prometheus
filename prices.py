@@ -15,7 +15,7 @@ def get_price(pair):
         df = yf.download(
             ticker,
             period="1d",
-            interval="1d",
+            interval="5m",
             progress=False,
             threads=False
         )
