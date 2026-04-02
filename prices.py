@@ -21,9 +21,14 @@ def get_price(pair):
         )
 
         if df.empty:
+            print(f"⚠️ DataFrame vuoto per {pair}")
             return None
 
-        return round(float(df["Close"].iloc[-1]), 5)
+        price = float(df["Close"].iloc[-1])
+        print(f"{pair} -> {price}")
 
-    except Exception:
+        return round(price, 5)
+
+    except Exception as e:
+        print(f"❌ Errore {pair}: {e}")
         return None
