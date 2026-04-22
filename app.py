@@ -89,7 +89,7 @@ col1, col2 = st.columns([1, 3])
 
 with col1:
     if st.button("🔄 Refresh"):
-         clear_price_cache()      # <-- fondamentale
+         clear_price_cache()
          st.cache_data.clear()
          st.rerun()
 
