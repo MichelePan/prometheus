@@ -10,9 +10,10 @@ YF_TICKERS = {
 }
 
 # ===============================
-# CACHE INTERNA (evita chiamate duplicate)
+# CACHE
 # ===============================
 _price_cache = {}
+_last_valid_cache = {}  # fallback ultimi valori buoni
 
 
 def _download_all_prices():
@@ -37,13 +38,16 @@ def _download_all_prices():
             try:
                 data = df[ticker]
 
-                if data.empty:
-                    print(f"⚠️ Vuoto: {pair}")
+                # Controlli robusti
+                if data is None or data.empty or "Close" not in data:
+                    print(f"⚠️ Dato mancante: {pair}")
                     prices[pair] = None
                     continue
 
                 price = float(data["Close"].iloc[-1])
-                prices[pair] = round(price, 5)
+                price = round(price, 5)
+
+                prices[pair] = price
 
             except Exception as e:
                 print(f"❌ Errore parsing {pair}: {e}")
@@ -58,30 +62,47 @@ def _download_all_prices():
 
 def get_price(pair):
     """
-    Restituisce il prezzo usando cache + batch download
-    Ritorna: (price, source) → source = "LIVE" o "CACHE"
+    Ritorna (price, source)
+    source = "LIVE" o "CACHE"
     """
-    global _price_cache
+    global _price_cache, _last_valid_cache
 
-    # se cache vuota → scarica tutto (LIVE)
+    source = "CACHE"
+
+    # Se cache vuota → prova download
     if not _price_cache:
         print("🔄 Download prezzi (batch)...")
-        _price_cache = _download_all_prices()
-        source = "LIVE"
-    else:
-        source = "CACHE"
+        new_prices = _download_all_prices()
+
+        if any(v is not None for v in new_prices.values()):
+            _price_cache = new_prices
+            source = "LIVE"
+
+            # aggiorna fallback
+            for k, v in new_prices.items():
+                if v is not None:
+                    _last_valid_cache[k] = v
+        else:
+            print("⚠️ Download fallito → uso fallback")
 
     price = _price_cache.get(pair)
 
+    # fallback se None
     if price is None:
-        print(f"⚠️ Prezzo non disponibile per {pair}")
+        price = _last_valid_cache.get(pair)
+
+        if price is not None:
+            print(f"↩️ Fallback usato per {pair}: {price}")
+            source = "CACHE"
+        else:
+            print(f"❌ Nessun dato disponibile per {pair}")
 
     return price, source
 
 
 def clear_price_cache():
     """
-    Permette di forzare refresh manuale
+    Reset cache per forzare refresh LIVE
     """
     global _price_cache
     _price_cache = {}
