@@ -57,6 +57,7 @@ def _download_all_prices():
 
 
 def get_price(pair):
+    return price, "LIVE" or "CACHE"
     """
     Restituisce il prezzo usando cache + batch download
     """
