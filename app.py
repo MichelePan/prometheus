@@ -89,8 +89,9 @@ col1, col2 = st.columns([1, 3])
 
 with col1:
     if st.button("🔄 Refresh"):
-        st.cache_data.clear()
-        st.rerun()
+         clear_price_cache()      # <-- fondamentale
+         st.cache_data.clear()
+         st.rerun()
 
 with col2:
     st.caption(f"Ultimo aggiornamento: {last_update}")
