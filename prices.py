@@ -13,13 +13,13 @@ YF_TICKERS = {
 # CACHE
 # ===============================
 _price_cache = {}
-_last_valid_cache = {}  # fallback ultimi valori buoni
+_last_valid_cache = {}
 
 
-def _download_all_prices():
-    """
-    Scarica tutti i prezzi in una sola chiamata
-    """
+# ===============================
+# DOWNLOAD BATCH (veloce ma instabile)
+# ===============================
+def _download_batch():
     try:
         tickers = list(YF_TICKERS.values())
 
@@ -36,30 +36,52 @@ def _download_all_prices():
 
         for pair, ticker in YF_TICKERS.items():
             try:
+                if ticker not in df:
+                    prices[pair] = None
+                    continue
+
                 data = df[ticker]
 
-                # Controlli robusti
                 if data is None or data.empty or "Close" not in data:
-                    print(f"⚠️ Dato mancante: {pair}")
                     prices[pair] = None
                     continue
 
                 price = float(data["Close"].iloc[-1])
-                price = round(price, 5)
+                prices[pair] = round(price, 5)
 
-                prices[pair] = price
-
-            except Exception as e:
-                print(f"❌ Errore parsing {pair}: {e}")
+            except Exception:
                 prices[pair] = None
 
         return prices
 
-    except Exception as e:
-        print(f"❌ Errore download batch: {e}")
+    except Exception:
         return {pair: None for pair in YF_TICKERS}
 
 
+# ===============================
+# DOWNLOAD SINGOLO (affidabile)
+# ===============================
+def _download_single(ticker):
+    try:
+        df = yf.download(
+            ticker,
+            period="1d",
+            interval="5m",
+            progress=False
+        )
+
+        if df is None or df.empty or "Close" not in df:
+            return None
+
+        return round(float(df["Close"].iloc[-1]), 5)
+
+    except Exception:
+        return None
+
+
+# ===============================
+# MAIN
+# ===============================
 def get_price(pair):
     """
     Ritorna (price, source)
@@ -69,40 +91,44 @@ def get_price(pair):
 
     source = "CACHE"
 
-    # Se cache vuota → prova download
+    # 1️⃣ Se cache vuota → prova batch
     if not _price_cache:
-        print("🔄 Download prezzi (batch)...")
-        new_prices = _download_all_prices()
+        print("🔄 Batch download...")
+        batch_prices = _download_batch()
 
-        if any(v is not None for v in new_prices.values()):
-            _price_cache = new_prices
+        # 2️⃣ fallback singolo per i mancanti
+        for pair_name, price in batch_prices.items():
+            if price is None:
+                ticker = YF_TICKERS[pair_name]
+                print(f"↻ Fallback singolo: {pair_name}")
+                price = _download_single(ticker)
+                batch_prices[pair_name] = price
+
+        _price_cache = batch_prices
+
+        if any(v is not None for v in batch_prices.values()):
             source = "LIVE"
 
-            # aggiorna fallback
-            for k, v in new_prices.items():
+            # salva fallback buoni
+            for k, v in batch_prices.items():
                 if v is not None:
                     _last_valid_cache[k] = v
-        else:
-            print("⚠️ Download fallito → uso fallback")
 
     price = _price_cache.get(pair)
 
-    # fallback se None
+    # 3️⃣ fallback finale
     if price is None:
         price = _last_valid_cache.get(pair)
 
         if price is not None:
-            print(f"↩️ Fallback usato per {pair}: {price}")
+            print(f"↩️ Uso fallback: {pair}")
             source = "CACHE"
         else:
-            print(f"❌ Nessun dato disponibile per {pair}")
+            print(f"❌ Nessun dato: {pair}")
 
     return price, source
 
 
 def clear_price_cache():
-    """
-    Reset cache per forzare refresh LIVE
-    """
     global _price_cache
     _price_cache = {}
