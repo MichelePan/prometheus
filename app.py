@@ -12,19 +12,22 @@ from calc import calc_pips
 # ===============================
 
 def fmt(value, decimals=2):
- if value is None:
- return "–"
- return f"{value:.{decimals}f}"
+    if value is None:
+        return "–"
+    return f"{value:.{decimals}f}"
+
 
 def cls_gap(value):
- if value is None:
- return ""
- return "pos" if value > 0 else "neg"
+    if value is None:
+        return ""
+    return "pos" if value > 0 else "neg"
+
 
 def cls_pips(value):
- if value is None:
- return ""
- return "pos" if value > 0 else "neg"
+    if value is None:
+        return ""
+    return "pos" if value > 0 else "neg"
+
 
 # ===============================
 # Config pagina
@@ -41,7 +44,7 @@ st_autorefresh(interval=5 * 60 * 1000, key="auto")
 # ===============================
 
 if "refresh_key" not in st.session_state:
- st.session_state.refresh_key = 0
+    st.session_state.refresh_key = 0
 
 # ===============================
 # Load dati
@@ -49,47 +52,50 @@ if "refresh_key" not in st.session_state:
 
 @st.cache_data(ttl=300)
 def load_blocks(_refresh_key):
- out = []
- any_missing = False
- source_mode = "CACHE"
+    out = []
+    any_missing = False
+    source_mode = "CACHE"
 
- for block in BLOCKS:
- rows = []
+    for block in BLOCKS:
+        rows = []
 
- for pair, direction, entry in block["pairs"]:
- att, source = get_price(pair)
+        for pair, direction, entry in block["pairs"]:
+            att, source = get_price(pair)
 
- if source == "LIVE":
- source_mode = "LIVE"
+            if source == "LIVE":
+                source_mode = "LIVE"
 
- if att is None:
- any_missing = True
+            if att is None:
+                any_missing = True
 
- pips = calc_pips(direction, entry, att) if att else None
+            pips = calc_pips(direction, entry, att) if att else None
 
- rows.append({
- "pair": pair,
- "direction": direction,
- "entry": entry,
- "att": att,
- "pips": pips
- })
+            rows.append({
+                "pair": pair,
+                "direction": direction,
+                "entry": entry,
+                "att": att,
+                "pips": pips
+            })
 
- gap = None
- if rows[0]["pips"] is not None and rows[1]["pips"] is not None:
- gap = round(rows[0]["pips"] + rows[1]["pips"], 2)
+        gap = None
+        if rows[0]["pips"] is not None and rows[1]["pips"] is not None:
+            gap = round(rows[0]["pips"] + rows[1]["pips"], 2)
 
- out.append((block["name"], rows, gap))
+        out.append((block["name"], rows, gap))
 
- ts = datetime.now()
+    ts = datetime.now()
 
- return out, ts, any_missing, source_mode
+    return out, ts, any_missing, source_mode
+
 
 # ===============================
 # LOAD
 # ===============================
 
-blocks, last_update_dt, any_missing, source_mode = load_blocks(st.session_state.refresh_key)
+blocks, last_update_dt, any_missing, source_mode = load_blocks(
+    st.session_state.refresh_key
+)
 last_update = last_update_dt.strftime("%d/%m/%Y %H:%M:%S")
 
 # ===============================
@@ -100,51 +106,51 @@ col1, col2, col3, col4 = st.columns([1, 2, 2, 2])
 
 # 🔄 Refresh
 with col1:
- if st.button("🔄 Refresh"):
- clear_price_cache()
- st.session_state.refresh_key += 1
- st.rerun()
+    if st.button("🔄 Refresh"):
+        clear_price_cache()
+        st.session_state.refresh_key += 1
+        st.rerun()
 
 # 🕒 Timestamp
 with col2:
- st.caption(f"Ultimo aggiornamento: {last_update}")
+    st.caption(f"Ultimo aggiornamento: {last_update}")
 
 # 📡 Fonte dati (LIVE / CACHE)
 with col3:
- if source_mode == "LIVE":
- label = "LIVE DATA 🔄"
- color = "green"
- else:
- label = "CACHE 📦"
- color = "gray"
+    if source_mode == "LIVE":
+        label = "LIVE DATA 🔄"
+        color = "green"
+    else:
+        label = "CACHE 📦"
+        color = "gray"
 
- st.markdown(
- f"<b style='color:{color}; font-size:16px'>Fonte: {label}</b>",
- unsafe_allow_html=True
- )
+    st.markdown(
+        f"<b style='color:{color}; font-size:16px'>Fonte: {label}</b>",
+        unsafe_allow_html=True
+    )
 
 # 🚦 Stato qualità dati
 with col4:
- now = datetime.now()
- age_sec = (now - last_update_dt).total_seconds()
+    now = datetime.now()
+    age_sec = (now - last_update_dt).total_seconds()
 
- if any_missing:
- status = "STALE ⚠️"
- color = "red"
- elif age_sec < 120:
- status = "LIVE ✅"
- color = "green"
- elif age_sec < 300:
- status = "OK 🟡"
- color = "orange"
- else:
- status = "STALE ⛔"
- color = "red"
+    if any_missing:
+        status = "STALE ⚠️"
+        color = "red"
+    elif age_sec < 120:
+        status = "LIVE ✅"
+        color = "green"
+    elif age_sec < 300:
+        status = "OK 🟡"
+        color = "orange"
+    else:
+        status = "STALE ⛔"
+        color = "red"
 
- st.markdown(
- f"<b style='color:{color}; font-size:16px'>Stato: {status}</b>",
- unsafe_allow_html=True
- )
+    st.markdown(
+        f"<b style='color:{color}; font-size:16px'>Stato: {status}</b>",
+        unsafe_allow_html=True
+    )
 
 # ===============================
 # HTML + CSS
@@ -153,48 +159,48 @@ with col4:
 html = """
 <style>
 .container {
- display: grid;
- grid-template-columns: repeat(4, 1fr);
- gap: 12px;
- font-family: Arial, sans-serif;
- font-size: 14px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    font-family: Arial, sans-serif;
+    font-size: 14px;
 }
 
 .block {
- border: 1px solid #999;
+    border: 1px solid #999;
 }
 
 .title {
- text-align: center;
- font-weight: bold;
- padding: 6px;
- border-bottom: 1px solid #999;
- background: #f2f2f2;
+    text-align: center;
+    font-weight: bold;
+    padding: 6px;
+    border-bottom: 1px solid #999;
+    background: #f2f2f2;
 }
 
 .grid {
- display: grid;
- grid-template-columns: 80px 1fr 1fr;
+    display: grid;
+    grid-template-columns: 80px 1fr 1fr;
 }
 
 .cell {
- padding: 6px;
- border-bottom: 1px solid #ddd;
+    padding: 6px;
+    border-bottom: 1px solid #ddd;
 }
 
 .header {
- text-align: center;
- font-weight: bold;
- border-bottom: 1px solid #999;
+    text-align: center;
+    font-weight: bold;
+    border-bottom: 1px solid #999;
 }
 
 .label {
- color: #666;
+    color: #666;
 }
 
 .value {
- text-align: right;
- font-family: monospace;
+    text-align: right;
+    font-family: monospace;
 }
 
 .sell { color: #c00000; font-weight: bold; }
@@ -204,16 +210,16 @@ html = """
 .neg { color: red; }
 
 .gap {
- text-align: center;
- font-weight: bold;
- padding: 6px;
- border-top: 1px solid #999;
+    text-align: center;
+    font-weight: bold;
+    padding: 6px;
+    border-top: 1px solid #999;
 }
 
 @media (max-width: 768px) {
- .container {
- grid-template-columns: 1fr;
- }
+    .container {
+        grid-template-columns: 1fr;
+    }
 }
 </style>
 
@@ -225,40 +231,40 @@ html = """
 # ===============================
 
 for name, rows, gap in blocks:
- sell = rows[0] if rows[0]["direction"] == "SELL" else rows[1]
- buy = rows[1] if sell == rows[0] else rows[0]
+    sell = rows[0] if rows[0]["direction"] == "SELL" else rows[1]
+    buy = rows[1] if sell == rows[0] else rows[0]
 
- html += f"""
- <div class="block">
- <div class="title">{name}</div>
+    html += f"""
+    <div class="block">
+        <div class="title">{name}</div>
 
- <div class="grid">
- <div class="cell"></div>
- <div class="cell header sell">{sell['pair']} (SELL)</div>
- <div class="cell header buy">{buy['pair']} (BUY)</div>
+        <div class="grid">
+            <div class="cell"></div>
+            <div class="cell header sell">{sell['pair']} (SELL)</div>
+            <div class="cell header buy">{buy['pair']} (BUY)</div>
 
- <div class="cell label">INGR</div>
- <div class="cell value">{fmt(sell['entry'], 5)}</div>
- <div class="cell value">{fmt(buy['entry'], 5)}</div>
+            <div class="cell label">INGR</div>
+            <div class="cell value">{fmt(sell['entry'], 5)}</div>
+            <div class="cell value">{fmt(buy['entry'], 5)}</div>
 
- <div class="cell label">ATT</div>
- <div class="cell value">{fmt(sell['att'], 5)}</div>
- <div class="cell value">{fmt(buy['att'], 5)}</div>
+            <div class="cell label">ATT</div>
+            <div class="cell value">{fmt(sell['att'], 5)}</div>
+            <div class="cell value">{fmt(buy['att'], 5)}</div>
 
- <div class="cell label">MOV</div>
- <div class="cell value {cls_pips(sell['pips'])}">
- {fmt(sell['pips'], 2)}
- </div>
- <div class="cell value {cls_pips(buy['pips'])}">
- {fmt(buy['pips'], 2)}
- </div>
- </div>
+            <div class="cell label">MOV</div>
+            <div class="cell value {cls_pips(sell['pips'])}">
+                {fmt(sell['pips'], 2)}
+            </div>
+            <div class="cell value {cls_pips(buy['pips'])}">
+                {fmt(buy['pips'], 2)}
+            </div>
+        </div>
 
- <div class="gap {cls_gap(gap)}">
- GAP PIPS&nbsp;&nbsp;{fmt(gap, 2)}
- </div>
- </div>
- """
+        <div class="gap {cls_gap(gap)}">
+            GAP PIPS&nbsp;&nbsp;{fmt(gap, 2)}
+        </div>
+    </div>
+    """
 
 html += "</div>"
 
