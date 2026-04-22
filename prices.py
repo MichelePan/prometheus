@@ -57,23 +57,26 @@ def _download_all_prices():
 
 
 def get_price(pair):
-    return price, "LIVE" or "CACHE"
     """
     Restituisce il prezzo usando cache + batch download
+    Ritorna: (price, source) → source = "LIVE" o "CACHE"
     """
     global _price_cache
 
-    # se cache vuota → scarica tutto
+    # se cache vuota → scarica tutto (LIVE)
     if not _price_cache:
         print("🔄 Download prezzi (batch)...")
         _price_cache = _download_all_prices()
+        source = "LIVE"
+    else:
+        source = "CACHE"
 
     price = _price_cache.get(pair)
 
     if price is None:
         print(f"⚠️ Prezzo non disponibile per {pair}")
 
-    return price
+    return price, source
 
 
 def clear_price_cache():
